@@ -1,3 +1,7 @@
+https://leetcode.com/playground/RQBPRVsn
+https://www.1point3acres.com/bbs/thread-1076537-1-1.html
+
+
 # /*
 #         Our goal is to build a simplified version of a real Robinhood system that reads a customer's trades from a stream, maintains what they own, and rectifies running out of cash (through a process called a "margin call", which we'll define later). We’re looking for clean code, good naming, testing, etc. We're not particularly looking for the most performant solution.
 
