@@ -1,5 +1,5 @@
-https://leetcode.com/playground/RQBPRVsn
-https://www.1point3acres.com/bbs/thread-1076537-1-1.html
+# https://leetcode.com/playground/RQBPRVsn
+# https://www.1point3acres.com/bbs/thread-1076537-1-1.html
 
 
 # /*
@@ -33,7 +33,7 @@ def build_portfolio(trades):
         price=int(price)
 
         cost=quantity*price
-        if action=="B"L
+        if action=="B":
             portfolio["CASH"]-=cost
             portfolio[symbol]=portfolio.get(symbol,0)+quantity
 
@@ -41,14 +41,15 @@ def build_portfolio(trades):
             portfolio["CASH"]+=cost
             portfolio[symbol]=portfolio.get(symbol,0)-quantity
     
-    res=[["CASH": str(portfolio["CASH"])]]
+    res=[["CASH", str(portfolio["CASH"])]]
 
     for key in sorted(portfolio):
         if key!="CASH":
             res.append([key, str(portfolio[key])])
     
     return res
-
+trades=[["1", "AAPL", "B", "10", "10"], ["3", "GOOG", "B", "20", "5"], ["10", "AAPL", "S", "5", "15"]]
+print(build_portfolio(trades))
 
 # **Step 2 (tests 5-7): Margin calls**
 
@@ -99,7 +100,7 @@ def build_portfolio(trades):
         prices[symbol]=price
 
         cost=quantity*price
-        if action=="B"L
+        if action=="B":
             portfolio["CASH"]-=cost
             portfolio[symbol]=portfolio.get(symbol,0)+quantity
             if portfolio["CASH"]<0:
@@ -111,13 +112,16 @@ def build_portfolio(trades):
             if portfolio[symbol]==0:
                 del portfolio[symbol]
     
-    res=[["CASH": str(portfolio["CASH"])]]
+    res=[["CASH", str(portfolio["CASH"])]]
 
     for key in sorted(portfolio):
         if key!="CASH":
             res.append([key, str(portfolio[key])])
     
     return res
+
+trades=[["1", "AAPL", "B", "10", "100"],["2", "AAPL", "S", "2", "80"],["3", "GOOG", "B", "15", "20"]]
+print(build_portfolio(trades))
 
 # **Step 3/Extension 1 (tests 8-10): Collateral**
 
@@ -144,24 +148,110 @@ def margin_calls(portfolio, prices):
             if symbol=="CASH" or portfolio[symbol]==0:
                 continue
             if symbol.endswith("O"):
-                sellable.append(prices[symbol], symbol)
+                sellable.append((prices[symbol], symbol))
             else:
                 special_stock=f"{symbol}O"
-                if special_stock in portfolio and portfolio[special_stock]<portfolio[symbol]:
+                if special_stock not in portfolio:
+                    sellable.append((prices[symbol], symbol))
+                elif special_stock in portfolio and portfolio[special_stock]<portfolio[symbol]:
                     sellable.append((prices[symbol], symbol))
 
         sellable.sort(key=lambda x: (-x[0],x[1]))
         if not sellable:
             raise ValueError("xxx")
-        
+
         price, symbol=sellable[0]
         if symbol.endswith("O"):
             num_to_sell=min(portfolio[symbol], -portfolio["CASH"]//price+1)
         else:
             special_stock = f"{symbol}O"
             excess_shares = portfolio[symbol] - portfolio.get(special_stock, 0)
+            # if excess_shares <= 0:
+            #     waitlist.append(sellable.pop)
+            #     continue  # Skip this stock and move to the next sellable stock
             num_to_sell = min(excess_shares, -portfolio["CASH"] // price + 1)
         portfolio["CASH"]+=num_to_sell*price
         portfolio[symbol]-=num_to_sell
         if portfolio[symbol]==0:
             del portfolio[symbol]
+
+# def margin_calls(portfolio, prices):
+#     while portfolio["CASH"] < 0:
+#         sellable = []
+
+#         for symbol in portfolio:
+#             if symbol == "CASH" or portfolio[symbol] == 0:
+#                 continue
+
+#             if symbol.endswith("O"):
+#                 # Special stock: Ensure collateral constraints are maintained
+#                 collateral = symbol[:-1]
+#                 if portfolio[symbol] <= portfolio.get(collateral, 0):
+#                     sellable.append((prices[symbol], symbol))
+#             else:
+#                 # Regular stock: Ensure selling it doesn't violate collateral constraints
+#                 special_stock = f"{symbol}O"
+#                 excess_shares = portfolio[symbol] - portfolio.get(special_stock, 0)
+#                 if excess_shares > 0:  # Only consider if there are excess shares
+#                     sellable.append((prices[symbol], symbol))
+
+#         # Sort sellable stocks by price descending, then alphabetically
+#         sellable.sort(key=lambda x: (-x[0], x[1]))
+
+#         if not sellable:
+#             raise ValueError("No stocks available to sell, but CASH is negative!")
+
+#         # Process the most valuable stock
+#         price, symbol = sellable[0]
+
+#         if symbol.endswith("O"):
+#             # Selling a special stock
+#             num_to_sell = min(portfolio[symbol], -portfolio["CASH"] // price + 1)
+#         else:
+#             # Selling a regular stock
+#             special_stock = f"{symbol}O"
+#             excess_shares = portfolio[symbol] - portfolio.get(special_stock, 0)
+#             if excess_shares <= 0:
+#                 continue  # Skip and go to the next sellable stock
+#             num_to_sell = min(excess_shares, -portfolio["CASH"] // price + 1)
+
+#         portfolio["CASH"] += num_to_sell * price
+#         portfolio[symbol] -= num_to_sell
+
+#         # Remove the stock from portfolio if depleted
+#         if portfolio[symbol] == 0:
+#             del portfolio[symbol]
+
+
+def build_portfolio_with_collateral(trades):
+    portfolio = {"CASH": 1000}
+    prices = {}
+
+    for trade in trades:
+        ts, symbol, action, quantity, price = trade
+        quantity = int(quantity)
+        price = int(price)
+        prices[symbol] = price
+
+        cost = quantity * price
+        if action == "B":
+            portfolio["CASH"] -= cost
+            portfolio[symbol] = portfolio.get(symbol, 0) + quantity
+            if portfolio["CASH"] < 0:
+                margin_calls(portfolio, prices)
+
+        elif action == "S":
+            portfolio["CASH"] += cost
+            portfolio[symbol] = portfolio.get(symbol, 0) - quantity
+            if portfolio[symbol] == 0:
+                del portfolio[symbol]
+
+    res = [["CASH", str(portfolio["CASH"])]]
+    for key in sorted(portfolio):
+        if key != "CASH":
+            res.append([key, str(portfolio[key])])
+
+    return res
+
+trades=[["1", "AAPL", "B", "5", "100"], ["2", "GOOG", "B", "5", "75"], ["3", "AAPLO", "B", "5", "50"]]
+print(build_portfolio_with_collateral(trades))

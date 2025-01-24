@@ -1,4 +1,4 @@
-https://leetcode.com/discuss/interview-question/882324/Robinhood-or-Phone-Screen
+# https://leetcode.com/discuss/interview-question/882324/Robinhood-or-Phone-Screen
 
 # ## A trade is defined as a fixed-width string containing the 4 properties given below separated by commas:
 
@@ -14,7 +14,8 @@ https://leetcode.com/discuss/interview-question/882324/Robinhood-or-Phone-Screen
 # which represents a trade of a buy of 100 shares of AAPL with ID "ABC123"
 
 
-# Given two lists of trades - called "house" and "street" trades, write code to filter out groups of matches between trades and return a list of unmatched house and street trades sorted alphabetically. There are many ways to match trades, the first and most important way is an exact match (Tests 1-5):
+# Given two lists of trades - called "house" and "street" trades, write code to filter out groups of matches between trades and return a list of unmatched house and street trades sorted alphabetically. 
+# There are many ways to match trades, the first and most important way is an exact match (Tests 1-5):
 
 
 # An exact match is a house_trade+street_trade pair with identical symbol, type, quantity, and ID
@@ -47,10 +48,10 @@ https://leetcode.com/discuss/interview-question/882324/Robinhood-or-Phone-Screen
 # "AAPL,B,0100,ABC123",
 # "GOOG,S,0050,CDC333"
 # ]
-
+from collections import Counter
 def unmatched_trades(house: list, street:list):
     house_count=Counter(house)
-    street_count=Counter(trade)
+    street_count=Counter(street)
 
     for trade in list(house_count.keys()):
         if trade in street_count:
@@ -67,10 +68,24 @@ def unmatched_trades(house: list, street:list):
             res.extend([trade]*count)
     return sorted(res)
 
+# Example Input
+house_trades = [
+    "AAPL,B,0100,ABC123",
+    "AAPL,B,0100,ABC123",
+    "GOOG,S,0050,CDC333"
+]
+street_trades = [
+    " FB,B,0100,GBGGGG",
+    "AAPL,B,0100,ABC123"
+]
+
+# Example Output
+print(unmatched_trades(house_trades, street_trades))
+
 ##Follow-up 1 (Test 6,7,8,9): 
 # A "fuzzy" match is a house_trade+street_trade pair with identical symbol, type, and quantity ignoring ID. 
 # Prioritize exact matches over fuzzy matches. Prioritize matching the earliest alphabetical house trade with the earliest alphabetical street trade in case of ties.
-
+from collections import defaultdict
 def unmatched_with_fuzzy(house, street):
 
     def fuzzy_key(trade):
@@ -78,7 +93,7 @@ def unmatched_with_fuzzy(house, street):
         return (s,t,q)
     
     h_count=Counter(house)
-    s_count=Counter(house)
+    s_count=Counter(street)
 
     # exact match
     for trade in list(h_count.keys()):
@@ -124,6 +139,20 @@ def unmatched_with_fuzzy(house, street):
 
     # Sort the final result
     return sorted(unmatched)
+
+house_trades = [
+    "AAPL,B,0100,ABC123",
+    "AAPL,B,0100,DEF456",
+    "GOOG,S,0050,XYZ789"
+]
+street_trades = [
+    "AAPL,B,0100,GHJ234",
+    " FB,B,0100,GBGGGG",
+    "GOOG,S,0050,XYZ789"
+]
+
+# Example Output
+print(unmatched_with_fuzzy(house_trades, street_trades))
 
 
 #Follow-up 2: (Test 10) An offsetting match is a house_trade+house_trade or street_trade+street_trade pair where the symbol and quantity of both trades are the same, but the type is different (one is a buy and one is a sell). 
@@ -189,29 +218,77 @@ def unmatched_trades_with_offsetting(house: list, street: list) -> list:
 
     # Step 3: Offsetting matches
     # Combine house and street for offsetting matches
+    house_remaining = []
+    street_remaining = []
+    for fuzzy, trade in house_fuzzy.items():
+        for t in trade:
+            house_remaining.append(t)
+    for fuzzy, trade in street_fuzzy.items():
+        for t in trade:
+            street_remaining.append(t)
+    print(house_remaining)
+    print(street_remaining)
     combined_trades = defaultdict(list)
     for trade in house_remaining:
         combined_trades[offsetting_key(trade)].append(trade)
     for trade in street_remaining:
         combined_trades[offsetting_key(trade)].append(trade)
+    print(combined_trades)
 
-    # Perform offsetting matches
-    for key in list(combined_trades.keys()):
+    unmatched = []
+    print(list(combined_trades.keys()))
+    for key in list(combined_trades.keys()):  # Use a copy of keys
         trades = combined_trades[key]
+
         buys = sorted([t for t in trades if t.split(",")[1] == "B"])
         sells = sorted([t for t in trades if t.split(",")[1] == "S"])
+        print(buys)
+        print(sells)
         matched = min(len(buys), len(sells))
-        combined_trades[key] = buys[matched:] + sells[matched:]
-        if not combined_trades[key]:
-            del combined_trades[key]
+        print(matched)
+        # Collect unmatched trades after performing offsetting matches
+        unmatched.extend(buys[matched:])
+        unmatched.extend(sells[matched:])
 
-    # Step 4: Collect remaining unmatched trades
-    unmatched = []
-    for trades in house_fuzzy.values():
-        unmatched.extend(trades)
-    for trades in street_fuzzy.values():
-        unmatched.extend(trades)
-    for trades in combined_trades.values():
-        unmatched.extend(trades)
+    # Perform offsetting matches
+    # for key in list(combined_trades.keys()):
+    #     trades = combined_trades[key]
+    #     print(trades)
+    #     buys = sorted([t for t in trades if t.split(",")[1] == "B"])
+    #     sells = sorted([t for t in trades if t.split(",")[1] == "S"])
+    #     if len(buys)>0 and len(sells)>0:
+    #         matched = min(len(buys), len(sells))
+    #         combined_trades[key] = buys[matched:] + sells[matched:]
+    #         if not combined_trades[key]:
+    #             del combined_trades[key]
+    # print(combined_trades)
+    # # Step 4: Collect remaining unmatched trades
+    # unmatched = []
+    # # for trades in house_fuzzy.values():
+    # #     unmatched.extend(trades)
+    # # for trades in street_fuzzy.values():
+    #     # unmatched.extend(trades)
+    # for trades in combined_trades.values():
+    #     for t in trades:
+            # unmatched.append(trades)
 
     return sorted(unmatched)
+
+
+house_trades = [
+    "AAPL,B,0100,ABC123",
+    "AAPL,B,0100,DEF456",
+    "GOOG,S,0050,XYZ789",
+    "MSFT,S,0020,MSFT123",
+    "MSFT,B,0020,MSFT456"
+]
+street_trades = [
+    "AAPL,B,0100,GHJ234",
+    " FB,B,0100,GBGGGG",
+    "GOOG,S,0050,XYZ789",
+    "TSLA,S,0030,TSLA789",
+    "TSLA,B,0030,TSLA456"
+]
+
+# Output
+print(unmatched_trades_with_offsetting(house_trades, street_trades))

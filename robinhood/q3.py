@@ -80,7 +80,7 @@ e.g.
  ["GOOG","50"]]
 """
 
-def process_trade(orders, inventoty):
+def process_trade(orders, inventory):
     inventory_dict={symbol: int(quantity) for symbol, quantity in inventory}
 
     for order in orders:
